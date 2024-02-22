@@ -1,0 +1,37 @@
+﻿{
+  "version": 2,
+  "configurePresets": [
+    {
+      "name": "win1x-debug",
+      "displayName": "Win1x Debug",
+      "description": "Target Windows with the Visual Studio development environment.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/${presetName}",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/bin/${presetName}"
+      },
+      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
+    },
+    {
+      "name": "win1x-release",
+      "displayName": "Win1x Release",
+      "description": "Target Windows with the Visual Studio development environment.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/${presetName}",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/bin/${presetName}"
+      },
+      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
+    }
+  ]
+}
