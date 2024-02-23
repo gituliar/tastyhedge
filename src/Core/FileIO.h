@@ -39,12 +39,12 @@ private:
 public:
     ~TextFileWriter();
 
-    bool
-        close(string& error);
-    bool
-        open(const string& path, string& error);
-    bool
-        write(const string& src, string& error);
+    Error
+        close();
+    Error
+        open(const string& dstPath);
+    Error
+        write(const string& src);
 };
 
 }

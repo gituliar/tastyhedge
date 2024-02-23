@@ -46,36 +46,36 @@ TextFileReader::readline(std::string_view& dst)
 
 TextFileWriter::~TextFileWriter()
 {
-    if (Error err; !close(err))
+    if (auto err = close(); !err.empty())
         LOG(ERROR) << err;
 }
 
-bool
-TextFileWriter::close(std::string& error)
+Error
+TextFileWriter::close()
 {
     if (m_dst.is_open()) {
         m_dst.close();
     }
 
-    return true;
+    return "";
 };
 
 
-bool
-TextFileWriter::open(const std::string& path, std::string& error)
+Error
+TextFileWriter::open(const std::string& path)
 {
     fs::create_directories(fs::path(path).parent_path());
 
     m_dst.open(path, std::ios::binary);
 
-    return true;
+    return "";
 };
 
 
-bool
-TextFileWriter::write(const std::string& src, std::string& error)
+Error
+TextFileWriter::write(const std::string& src)
 {
     m_dst << src;
 
-    return true;
+    return "";
 };

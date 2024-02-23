@@ -128,7 +128,7 @@ CsvReader::readline()
 Error
 CsvWriter::close()
 {
-    if (Error err; !m_dst.close(err))
+    if (auto err = m_dst.close(); !err.empty())
         return "CsvWriter::close : " + err;
 
     return "";
@@ -138,8 +138,8 @@ CsvWriter::close()
 Error
 CsvWriter::open(const fs::path& dstPath)
 {
-    if (Error err; !m_dst.open(dstPath.string(), err))
-        return err;
+    if (auto err = m_dst.open(dstPath.string()); !err.empty())
+        return "CsvWriter::open : " + err;
 
     return "";
 }
@@ -148,11 +148,8 @@ CsvWriter::open(const fs::path& dstPath)
 Error
 CsvWriter::writeline(const std::string_view& line)
 {
-    Error err;
     //  FIXME: switch to std::string_view
-    if (!m_dst.write(std::string(line), err))
-        return "CsvWriter::writeline : " + err;
-    if (!m_dst.write("\n", err))
+    if (auto err = m_dst.write(std::string(line) + '\n'); !err.empty())
         return "CsvWriter::writeline : " + err;
 
     return "";
