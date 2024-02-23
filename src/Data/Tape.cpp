@@ -47,13 +47,10 @@ error:
 
 
 
-
 Error
 tasty::loadTape(const fs::path& srcPath, Tape& tape)
 {
     LOG(INFO) << srcPath;
-
-    Error err;
 
     CsvReader src;
     if (auto err = src.open(srcPath); !err.empty())

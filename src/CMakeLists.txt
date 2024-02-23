@@ -12,8 +12,6 @@ add_library(
   "Data/RatesHub.cpp"
   "Data/Tape.cpp"
 
-  "version.cpp"
-
   "_public/lets_be_rational/erf_cody.cpp"
   "_public/lets_be_rational/lets_be_rational.cpp"
   "_public/lets_be_rational/normaldistribution.cpp"
@@ -48,19 +46,11 @@ target_link_libraries(
 add_executable(
   tastyhedge
 
-  tastyhedge.cpp
+  "tastyhedge.cpp"
+  "version.cpp"
 )
 
-target_link_libraries(
-    tastyhedge
-	PRIVATE
-        tastyhedge_lib
-
-        $<IF:$<TARGET_EXISTS:docopt>,docopt,docopt_s>
-)
-
-
-### version
+### tasty::Version
 ###
 ### From https://www.mattkeeter.com/blog/2018-01-06-versioning/
 ###
@@ -72,4 +62,12 @@ add_custom_command(
         ${CMAKE_CURRENT_BINARY_DIR}/_version.cpp
     COMMAND
         ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/version.cmake
+)
+
+target_link_libraries(
+    tastyhedge
+	PRIVATE
+        tastyhedge_lib
+
+        $<IF:$<TARGET_EXISTS:docopt>,docopt,docopt_s>
 )

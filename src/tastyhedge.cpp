@@ -5,14 +5,13 @@
 #include "Data/Tape.h"
 #include "Data/RatesHub.h"
 
+#include "version.h"
+
 
 using namespace tasty;
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 
-
-const std::string g_usage = R"(
+const string g_usage = R"(
 tastyhedge - Trading Analytics
 
 Usage:
@@ -21,7 +20,7 @@ Usage:
 Global Options:
     --mds <dir>         Market Data Store [default: c:/mds]
 
-    -v, --verbose       print DEBUG info
+    --version           Print version
 )";
 
 
@@ -109,18 +108,20 @@ cmdCalibrate(
 Error
 tastyhedge(int argc, char **argv)
 {
+    const auto version = "tastyhedge " + Version::GIT_REV + " (" + Version::BUILD_DATE + ")";
+
     /// Parse Command-Line Arguments
     ///
-    auto args = docopt::docopt(g_usage, { argv + 1, argv + argc }, true);
+    auto args = docopt::docopt(g_usage, { argv + 1, argv + argc }, true, version);
 
     /// Init Logger
     ///
     Logger::level() = INFO;
 
-    //LOG(INFO) << kVersion;
+    LOG(INFO) << version;
 
-    std::string command;
-
+    /// Run CLI Command
+    ///
     if (args.at("calibrate").asBool()) {
         const auto srcPath = fs::absolute(args.at("<src>").asString());
         const auto dstPath = fs::absolute(args.at("<dst>").asString());
@@ -137,37 +138,16 @@ tastyhedge(int argc, char **argv)
 
 
 
-BOOL WINAPI ConsoleHandler(DWORD signum)
-{
-    if ((signum == CTRL_C_EVENT) or (signum == CTRL_BREAK_EVENT))
-    {
-        LOG(INFO) << "SIGINT / Ctrl-C (win32)";
-
-        std::exit(signum);
-    }
-    return true;
-};
-
-
 int main(int argc, char** argv)
 {
-    if (!SetConsoleCtrlHandler(ConsoleHandler, TRUE))
-    {
-        LOG(ERROR) << "Unable to install console handler";
-        return EXIT_FAILURE;
-    };
-
-    try
-    {
-        if (auto err = tastyhedge(argc, argv); !err.empty())
-        {
+    try {
+        if (auto err = tastyhedge(argc, argv); !err.empty()) {
             LOG(ERROR) << err;
 
             return EXIT_FAILURE;
         };
     }
-    catch (const std::exception& ex)
-    {
+    catch (const std::exception& ex) {
         LOG(ERROR) << ex.what();
     }
 

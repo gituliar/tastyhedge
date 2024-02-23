@@ -52,7 +52,7 @@ split(const string_view& src, vector<string_view>& dst, char sep = ',', const u3
 }
 
 
-/// Definition
+/// CsvReader
 ///
 Error
 CsvReader::close()

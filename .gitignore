@@ -4,6 +4,7 @@
 .vs
 CMakeCache.txt
 CMakeFiles
-src/version.cpp
 bin
+src/version.cpp
+tastyhedge
 out
