@@ -49,12 +49,13 @@ cmdCalibrate(
     CsvWriter dst;
     if (auto err = dst.open(bufPath); !err.empty())
         return "cmdCalibrate: " + err;
+    LOG(INFO) << "WRITE " << bufPath;
 
 
     Model_BlackScholes model;
 
     for (const auto& quote : tape) {
-        auto rateCurve = ratesHub.rateCurve(quote.ts);
+        auto rateCurve = ratesHub.rateCurve(quote.ts.date());
 
         model.calibrate(quote, rateCurve);
 
@@ -99,6 +100,7 @@ cmdCalibrate(
         return "cmdCalibrate : " + err;
 
     fs::rename(bufPath, dstPath);
+    LOG(INFO) << "RENAME " << dstPath;
 
     return "";
 }

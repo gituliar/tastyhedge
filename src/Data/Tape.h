@@ -23,13 +23,13 @@ struct Quote
     Exercise
         exercise;
 
+    u16 dte;
+
     f32 callBid;
     f32 callAsk;
 
     f32 putBid;
     f32 putAsk;
-
-    u16 dte;
 
 public:
     Error

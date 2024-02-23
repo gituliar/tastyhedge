@@ -8,88 +8,43 @@
 namespace tasty
 {
 
-class FileReader
-{
-public:
-    virtual bool
-        eof() const = 0;
-
-    virtual Error
-        close() = 0;
-    virtual Error
-        open(const fs::path& srcPath) = 0;
-    virtual Error
-        read(string_view& dst) = 0;
-    virtual Error
-        readline(string_view& dst, bool ignore_newline = true) = 0;
-};
-
-
-class FileWriter
-{
-public:
-    virtual bool
-        close(string& error) = 0;
-    virtual bool
-        open(const string& path, string& error) = 0;
-    virtual bool
-        write(const string& src, string& error) = 0;
-};
-
-
-
-class TextFileReader : public FileReader
+class TextFileReader
 {
 private:
-    fs::path
-        m_path;
-
-    FILE*
+    string
+        m_buf;
+    std::ifstream
         m_src;
-
-    c8* m_buf;
-    u64 m_capacity;
-    u64 m_size;
-
-    u32 m_cursor;
 
 
 public:
-    TextFileReader();
     ~TextFileReader();
 
+    Error
+        close();
+    Error
+        open(const fs::path& srcPath);
     bool
-        eof() const override;
-
-    Error
-        close() override;
-    Error
-        open(const fs::path& srcPath) override;
-    Error
-        read(string_view& dst) override;
-    Error
-        readline(string_view& dst, bool ignore_newline = true) override;
+        readline(string_view& dst);
 };
 
 
 
-class TextFileWriter : public FileWriter
+class TextFileWriter
 {
 private:
     std::ofstream
         m_dst;
 
 public:
-    // FileWriter
-
     ~TextFileWriter();
 
     bool
-        close(string& error) override;
+        close(string& error);
     bool
-        open(const string& path, string& error) override;
+        open(const string& path, string& error);
     bool
-        write(const string& src, string& error) override;
+        write(const string& src, string& error);
 };
 
 }

@@ -56,20 +56,20 @@ enum kCsv_ : u8 {
     kCsv_putAskPrice,
     kCsv_putMidIv,
 
-    kCsv_Date,
-    kCsv_1M,
-    kCsv_2M,
-    kCsv_3M,
-    kCsv_4M,
-    kCsv_6M,
-    kCsv_1Y,
-    kCsv_2Y,
-    kCsv_3Y,
-    kCsv_5Y,
-    kCsv_7Y,
-    kCsv_10Y,
-    kCsv_20Y,
-    kCsv_30Y,
+    Csv_Date,
+    Csv_1M,
+    Csv_2M,
+    Csv_3M,
+    Csv_4M,
+    Csv_6M,
+    Csv_1Y,
+    Csv_2Y,
+    Csv_3Y,
+    Csv_5Y,
+    Csv_7Y,
+    Csv_10Y,
+    Csv_20Y,
+    Csv_30Y,
 
     kCsv_Size
 };
@@ -141,7 +141,7 @@ class CsvReader
 {
 
 private:
-    Ptr<FileReader>
+    TextFileReader
         m_src;
     string
         m_header;
@@ -156,8 +156,6 @@ public:
     CsvReader() :
         m_buf{ kCsv_Size } {};
 
-    bool
-        eof() const { return m_src->eof(); };
     string_view
         header() const { return m_header; };
     string_view
@@ -177,7 +175,7 @@ public:
     {
         
         string_view sv;
-        if (auto i = m_col[id]; i < 0)
+        if (auto i = m_col[id]; i < 0 || i >= m_buf.size())
             return "CsvReader::get : Missing '" + string(kCsvNames[id]) + "' column";
         else
             sv = m_buf[i];
@@ -204,7 +202,7 @@ public:
 
     Error
         open(const fs::path& path);
-    Error
+    bool
         readline();
 };
 
@@ -213,7 +211,7 @@ public:
 class CsvWriter
 {
 private:
-    Ptr<FileWriter>
+    TextFileWriter
         m_dst;
 
     string

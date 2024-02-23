@@ -57,7 +57,7 @@ split(const string_view& src, vector<string_view>& dst, char sep = ',', const u3
 Error
 CsvReader::close()
 {
-    return m_src->close();
+    return m_src.close();
 }
 
 
@@ -96,18 +96,11 @@ CsvReader::open(const fs::path& path_)
 
     const auto& path = path_.string();
 
-    if (path.ends_with("zst")) {
-        //m_src = make_ptr<ZstdFileReader>();
-    }
-    else {
-        m_src = make_ptr<TextFileReader>();
-    }
-
-    if (auto err = m_src->open(path); !err.empty())
+    if (auto err = m_src.open(path); !err.empty())
         return "CsvReader::open : " + err;
 
-    if (auto err = m_src->readline(m_line); !err.empty())
-        return "CsvReader::open : " + err;
+    if (!m_src.readline(m_line))
+        return "CsvReader::open : EOF";
 
     /// split header
     ///
@@ -121,22 +114,21 @@ CsvReader::open(const fs::path& path_)
 }
 
 
-Error
+bool
 CsvReader::readline()
 {
-    if (auto err = m_src->readline(m_line); !err.empty())
-        return "CsvReader::readline : " + err;
+    auto isOpen = m_src.readline(m_line);
 
     split(m_line, m_buf);
 
-    return "";
+    return isOpen;
 }
 
 
 Error
 CsvWriter::close()
 {
-    if (Error err; !m_dst->close(err))
+    if (Error err; !m_dst.close(err))
         return "CsvWriter::close : " + err;
 
     return "";
@@ -146,14 +138,7 @@ CsvWriter::close()
 Error
 CsvWriter::open(const fs::path& dstPath)
 {
-    if (dstPath.string().ends_with(".zst") || dstPath.string().ends_with(".zst.buf")) {
-        //m_dst = make_ptr<ZstdFileWriter>();
-    }
-    else {
-        m_dst = make_ptr<TextFileWriter>();
-    }
-
-    if (Error err; !m_dst->open(dstPath.string(), err))
+    if (Error err; !m_dst.open(dstPath.string(), err))
         return err;
 
     return "";
@@ -165,9 +150,9 @@ CsvWriter::writeline(const std::string_view& line)
 {
     Error err;
     //  FIXME: switch to std::string_view
-    if (!m_dst->write(std::string(line), err))
+    if (!m_dst.write(std::string(line), err))
         return "CsvWriter::writeline : " + err;
-    if (!m_dst->write("\n", err))
+    if (!m_dst.write("\n", err))
         return "CsvWriter::writeline : " + err;
 
     return "";

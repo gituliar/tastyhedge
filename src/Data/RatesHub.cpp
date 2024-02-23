@@ -7,36 +7,21 @@ Error
 RateCurve::fromCsv(const CsvReader& src)
 {
     static const Duration
-        kCsvTerms[] =
-    {
-        0_s, /// Date
-        1_M,
-        2_M,
-        3_M,
-        4_M,
-        6_M,
-        1_Y,
-        2_Y,
-        3_Y,
-        5_Y,
-        7_Y,
-        10_Y,
-        20_Y,
-        30_Y
-    };
+        terms[] = { 0_s, 1_M, 2_M, 3_M, 4_M, 6_M, 1_Y, 2_Y, 3_Y, 5_Y, 7_Y, 10_Y, 20_Y, 30_Y };
 
-    if (auto err = src.getMDY(kCsv_Date, m_anchor); !err.empty())
+    static const vector<kCsv_>
+        columns = { Csv_Date, Csv_1M, Csv_2M, Csv_3M, Csv_4M, Csv_6M, Csv_1Y, Csv_2Y, Csv_3Y,
+            Csv_5Y, Csv_7Y, Csv_10Y, Csv_20Y, Csv_30Y };
+
+    if (auto err = src.getMDY(Csv_Date, m_anchor); !err.empty())
         return "RateCurve::fromCsv : Date : " + err;
 
     m_rates.clear();
     m_terms.clear();
-    const auto& columns = kCsv_s();
     for (auto i = 1; i < columns.size(); i++) {
         /// It's OK of some columns are missing
         if (!src.contains(columns[i]))
             continue;
-
-        const auto& term = kCsvTerms[i];
 
         f32 rate;
         if (auto err = src.get(columns[i], rate); !err.empty()) {
@@ -45,11 +30,11 @@ RateCurve::fromCsv(const CsvReader& src)
             if (sv.empty())
                 continue; // missing, it's OK
 
-            return "RateCurve::fromCsv : " + term.toString() + " : " + err;
+            return "RateCurve::fromCsv : " + terms[i].toString() + " : " + err;
         }
 
         m_rates.push_back(rate);
-        m_terms.push_back(term);
+        m_terms.push_back(terms[i]);
     }
 
     return "";
@@ -59,9 +44,6 @@ RateCurve::fromCsv(const CsvReader& src)
 f32
 RateCurve::rate(const Duration& term) const
 {
-    if (!std::isnan(m_rate))
-        return m_rate;
-
     const auto ii = std::lower_bound(m_terms.begin(), m_terms.end(), term);
 
     if (ii == m_terms.end())
@@ -80,9 +62,7 @@ RatesHub::load(const fs::path& srcPath)
     if (auto err = src.open(srcPath); !err.empty())
         return "RatesHub::load : " + err;
 
-    while (!src.eof()) {
-        if (auto err = src.readline(); !err.empty())
-            return "RatesHub::load : " + err;
+    while (src.readline()) {
 
         RateCurve curve;
         if (auto err = curve.fromCsv(src); !err.empty())

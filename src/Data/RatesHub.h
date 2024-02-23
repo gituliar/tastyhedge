@@ -12,30 +12,6 @@ namespace tasty
 
 class RateCurve
 {
-public:
-    static const auto&
-        kCsv_s()
-    {
-        static const vector<kCsv_> columns =
-        {
-            kCsv_Date,
-            kCsv_1M,
-            kCsv_2M,
-            kCsv_3M,
-            kCsv_4M,
-            kCsv_6M,
-            kCsv_1Y,
-            kCsv_2Y,
-            kCsv_3Y,
-            kCsv_5Y,
-            kCsv_7Y,
-            kCsv_10Y,
-            kCsv_20Y,
-            kCsv_30Y
-        };
-        return columns;
-    };
-
 private:
     Time
         m_anchor;
@@ -44,12 +20,8 @@ private:
     vector<f32>
         m_rates;
 
-    f64 m_rate;
-
 public:
-    RateCurve() : m_rate{ NaN } {};
-
-    RateCurve(const f64 rate) : m_rate{ rate } {};
+    RateCurve() {};
 
     RateCurve(const Time& anchor, const vector<Duration>& terms, const vector<f32>& rates) :
         m_anchor{ anchor }, m_terms{ terms }, m_rates{ rates }
