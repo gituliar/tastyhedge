@@ -26,7 +26,13 @@ Tested on Ubuntu 22.04.3 LTS (WSL) with GCC 11:
   ```
 
 - **Install & Run**
+
   ```
   cp ./out/linux-release/src/tastyhedge .
+  ```
+
+  ```
   ./tastyhedge
   ```
+
+For more available options see `Makefile`.
