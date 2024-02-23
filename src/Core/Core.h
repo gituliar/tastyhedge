@@ -12,6 +12,12 @@ using namespace std::literals;
 
 namespace fs = std::filesystem;
 
+/// ---- Tracy Profiler --------------------------------------------------------
+///
+/// Comment this line to ENABLE profiling
+///
+#undef TRACY_ENABLE
+
 
 /// Common Types
 /// ------------

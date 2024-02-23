@@ -27,6 +27,12 @@ find_package(
 find_package(
     QuantLib CONFIG REQUIRED)
 
+find_package(
+    Tracy CONFIG REQUIRED)
+find_package(
+    Threads REQUIRED)
+
+
 
 target_include_directories(
     tastyhedge_lib
@@ -38,6 +44,7 @@ target_link_libraries(
     tastyhedge_lib
 	PRIVATE
         QuantLib::QuantLib
+        Tracy::TracyClient
 )
 
 

@@ -12,6 +12,8 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 
+#include "tracy/Tracy.hpp"
+
 namespace ql = QuantLib;
 
 using namespace tasty;
@@ -49,6 +51,8 @@ Model_BlackScholes::calibrate(const Quote& quote, const RateCurve* rateCurve)
 Error
 Model_BlackScholes::calibrateAmerican(f64 v_, f64 s, f64 k, f64 dte, f64 r, f64 q, Parity w, f64& z)
 {
+    ZoneScoped;
+
     Error err;
 
     f64 v = v_;
@@ -59,13 +63,13 @@ Model_BlackScholes::calibrateAmerican(f64 v_, f64 s, f64 k, f64 dte, f64 r, f64 
     /// Initial guess
     ///
     if (err = calibrateEuropean(v_, s, k, dte, r, q, w, z); !err.empty())
-        goto error;
+        return "Model_BlackScholes::calibrateAmerican : " + err;
 
     /// Newton-Raphson solver
     ///
     while  (n-- > 0 && !std::isnan(z)) {
         if (err = priceAmerican(s, k, dte, z, r, q, w, v); !err.empty())
-            goto error;
+            return "Model_BlackScholes::calibrateAmerican : " + err;
         if (std::isnan(v))
             break;
 
@@ -85,15 +89,14 @@ Model_BlackScholes::calibrateAmerican(f64 v_, f64 s, f64 k, f64 dte, f64 r, f64 
     ///
     z = NaN;
     return "";
-
-error:
-    return "Model_BlackScholes::calibrateAmerican : " + err;
 }
 
 
 Error
 Model_BlackScholes::calibrateEuropean(f64 v, f64 s, f64 k, f64 dte, f64 r, f64 q, Parity w, f64& z)
 {
+    ZoneScoped;
+
     f64 t = f64(dte) / kDaysInYear;
     f64 k_ = k * exp(-t * r);
 
@@ -116,36 +119,48 @@ Model_BlackScholes::calibrateEuropean(f64 v, f64 s, f64 k, f64 dte, f64 r, f64 q
 Error
 Model_BlackScholes::priceAmerican(f64 s, f64 k, f64 dte, f64 z, f64 r, f64 q, Parity w, f64& v) const
 {
-    auto w_ = (w == Parity_Call) ? ql::Option::Call : ql::Option::Put;
-    auto payoff = ql::ext::make_shared<ql::PlainVanillaPayoff>(w_, k);
-
-    // set up dates
+    /// Anchor + Maturity
+    ///
     auto anchor = ql::Date(31, ql::Jul, 1944);
-    auto dayCounter = ql::Actual365Fixed();
+    auto act365 = ql::Actual365Fixed();
     auto maturity = anchor + std::ceil(dte);
 
     ql::Settings::instance().evaluationDate() = anchor;
 
+    /// Option Data
+    ///
+    ql::Option::Type
+        w_ = (w == Parity_Call) ? ql::Option::Call : ql::Option::Put;
+
+    ql::Handle<ql::YieldTermStructure>
+        r_(ql::ext::make_shared<ql::FlatForward>(anchor, r, act365));
+
+    ql::Handle<ql::YieldTermStructure>
+        q_(ql::ext::make_shared<ql::FlatForward>(anchor, q, act365));
+
+    ql::Handle<ql::Quote>
+        s_(ql::ext::make_shared<ql::SimpleQuote>(s));
+
+    ql::Handle<ql::BlackVolTermStructure>
+        z_(ql::ext::make_shared<ql::BlackConstantVol>(anchor, ql::TARGET(), abs(z), act365));
+
+    /// Black-Scholes Model
+    ///
+    auto bsm = ql::ext::make_shared<ql::BlackScholesMertonProcess>(s_, q_, r_, z_);
+    auto engine = ql::ext::make_shared<ql::QdFpAmericanEngine>(
+        bsm, ql::QdFpAmericanEngine::fastScheme());
+
+    auto payoff = ql::ext::make_shared<ql::PlainVanillaPayoff>(w_, k);
     auto americanExercise = ql::ext::make_shared<ql::AmericanExercise>(anchor, maturity);
-
-
-    ql::Handle<ql::YieldTermStructure> flatTermStructure(ql::ext::make_shared<ql::FlatForward>(anchor, r, dayCounter));
-
-    ql::Handle<ql::YieldTermStructure> flatDividendTS(ql::ext::make_shared<ql::FlatForward>(anchor, q, dayCounter));
-
-    ql::Handle<ql::Quote> underlyingH(ql::ext::make_shared<ql::SimpleQuote>(s));
-
-    ql::Handle<ql::BlackVolTermStructure> flatVolTS(
-        ql::ext::make_shared<ql::BlackConstantVol>(anchor, ql::TARGET(), std::abs(z), dayCounter));
-
-    auto bsmProcess = ql::ext::make_shared<ql::BlackScholesMertonProcess>(underlyingH, flatDividendTS, flatTermStructure, flatVolTS);
-
-    auto engine = ql::ext::make_shared<ql::QdFpAmericanEngine>(bsmProcess, ql::QdFpAmericanEngine::fastScheme());
-
     ql::VanillaOption americanOption(payoff, americanExercise);
+
     americanOption.setPricingEngine(engine);
 
+    /// Boundary-Interpolation Pricer
+    ///
     try {
+        ZoneScoped;
+
         v = americanOption.NPV();
         if (z < 0)
         {
